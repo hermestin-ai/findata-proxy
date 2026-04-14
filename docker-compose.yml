@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  findata-proxy:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - SEC_USER_AGENT=${SEC_USER_AGENT:-Claude Code hermestin1@gmail.com}
+      - ALLOW_ORIGINS=*
+      - CACHE_DIR=/app/.cache
+      - CACHE_TTL=3600
+    volumes:
+      - findata_cache:/app/.cache
+    restart: unless-stopped
+
+volumes:
+  findata_cache:
