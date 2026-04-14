@@ -131,14 +131,28 @@ financial strength, Buy/Hold/Avoid recommendation."
 
 ## Observed behavior (v0.2)
 
-| LLM | Tool execution | Reasoning quality |
-|-----|----------------|-------------------|
-| `ollama:qwen2.5:14b` | ✅ Executes tools correctly | ❌ Fails to synthesize — asks clarifying questions instead of answering |
-| `ollama:qwen3:30b`   | ✅ Executes tools correctly | ✅ Produces usable theses |
-| `openai:gpt-4o` (if key set) | ✅ | ✅ Best quality |
-| `anthropic:claude-sonnet-4` (if key set) | ✅ | ✅ Best for reasoning-heavy analysis |
+| LLM | Tool execution | Reasoning quality | Viable on consumer Mac? |
+|-----|----------------|-------------------|-------------------------|
+| `ollama:qwen2.5:14b`  | ✅ Executes tools correctly | ❌ Fails to synthesize — asks clarifying questions | ✅ ~30s first call, ~10s subsequent |
+| `ollama:qwen3:30b`    | ⚠ MoE 30B (3.3B active) — prompt eval is minutes-long on CPU | Not reached in testing | ❌ Not viable without GPU / Apple Silicon Metal acceleration |
+| `openai:gpt-4o-mini`  | ✅ | ✅ Solid | ✅ Best $/quality for this workload (~$0.01-0.05/query) |
+| `anthropic:claude-haiku-4-5` | ✅ | ✅ Great | ✅ Similar pricing, slightly better reasoning |
+| `openai:gpt-4o` / `claude-sonnet-4` | ✅ | ✅ Best | ✅ Overkill for simple queries but ideal for full theses |
 
-Tool call latency: 30-40s first call (model load + yfinance cold), 2-10s subsequent.
+**Key finding**: Dexter's system prompt is large (all tool descriptions + SOUL.md
+injection), and its agent loop makes several LLM calls per query. This makes local
+LLMs **context-bound**: the default Ollama 4096-token context truncates the prompt.
+A custom modelfile with `PARAMETER num_ctx 32768` fixes that but pushes 30B models
+past practical latency on consumer hardware.
+
+**Recommendation**: for serious use of Dexter + findata-proxy, set an API key
+(OpenAI, Anthropic, or OpenRouter — any of the paid providers listed above).
+The proxy saves you $200/mo on data; spending $5-20/mo on the LLM is still a
+~90-95% cost reduction versus the full Financial Datasets + premium LLM stack.
+
+Tool call latency through the proxy: 30-40s first call (yfinance cold), 2-10s
+subsequent requests (served from diskcache). SEC EDGAR calls are ~1s uncached,
+instant from cache.
 
 ## Known compatibility notes
 
