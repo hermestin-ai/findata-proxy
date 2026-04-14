@@ -96,7 +96,9 @@ Or:
 
 ## Using with Dexter
 
-Dexter (TypeScript) calls Financial Datasets at a hardcoded base URL. To point it at
+**✅ Verified working end-to-end as of v0.2** — see [`docs/DEXTER_INTEGRATION.md`](docs/DEXTER_INTEGRATION.md) for the full guide including Bun/Ollama setup, two one-line patches to Dexter, a headless runner script, and launchd/Docker service configs.
+
+Quick version: Dexter (TypeScript) calls Financial Datasets at a hardcoded base URL. To point it at
 this proxy, either:
 
 1. **Quick**: edit `dexter/src/tools/finance/api.ts` and set
