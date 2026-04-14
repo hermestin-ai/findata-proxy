@@ -18,6 +18,27 @@ agent's `BASE_URL` at `http://localhost:8000` and keep working — for $0.
 It will never be a perfect byte-for-byte replica: free data has gaps (see the coverage
 table below). But it gets you 80-90% of the way there for research and backtesting.
 
+## Data source: SEC XBRL companyfacts
+
+For US-listed companies, `/financials/*` is backed by **SEC EDGAR XBRL companyfacts**
+(`https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json`). This is the same
+primary source that every commercial data vendor resells. It gives you:
+
+- **15+ years** of annual statements per ticker (no yfinance 4-year ceiling)
+- Clean quarterly data, TTM aggregation, proper period alignment
+- Authoritative values pulled directly from 10-K/10-Q XBRL filings
+
+When a ticker is not available in XBRL (foreign private issuers without US filings,
+deregistered companies, or temporary SEC outages) the server automatically falls
+back to yfinance. You can force `?source=yfinance` on any `/financials/*` endpoint
+for debugging. The response includes a `_source` field so you know where the data
+came from.
+
+Field coverage in XBRL mode: see `app/sec/concept_map.py` — each FD field maps
+to an ordered list of XBRL candidate concepts so different issuers' reporting
+styles are handled (e.g. `RevenueFromContractWithCustomerExcludingAssessedTax`
+vs `Revenues` vs `SalesRevenueNet`).
+
 ## Coverage
 
 | Endpoint                                   | Source       | Status |
@@ -25,10 +46,10 @@ table below). But it gets you 80-90% of the way there for research and backtesti
 | `/prices/snapshot/`                        | yfinance     | OK     full |
 | `/prices/` (historical)                    | yfinance     | OK     full |
 | `/prices/snapshot/tickers/`                | static list  | OK     full (S&P 500 top 100) |
-| `/financials/income-statements/`           | yfinance     | PARTIAL — field names approximate FD |
-| `/financials/balance-sheets/`              | yfinance     | PARTIAL |
-| `/financials/cash-flow-statements/`        | yfinance     | PARTIAL |
-| `/financials/` (combined)                  | yfinance     | PARTIAL |
+| `/financials/income-statements/`           | **SEC XBRL** → yfinance | **OK full** — 15+ yr history from SEC |
+| `/financials/balance-sheets/`              | **SEC XBRL** → yfinance | **OK full** — 15+ yr history from SEC |
+| `/financials/cash-flow-statements/`        | **SEC XBRL** → yfinance | **OK full** — 15+ yr history from SEC |
+| `/financials/` (combined)                  | **SEC XBRL** → yfinance | **OK full** |
 | `/financial-metrics/snapshot/`             | yfinance     | OK     full |
 | `/financial-metrics/` (historical)         | yfinance     | PARTIAL — snapshot wrapped as 1-item list |
 | `/filings/`                                | SEC EDGAR    | OK     full |

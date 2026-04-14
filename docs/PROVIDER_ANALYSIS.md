@@ -84,6 +84,21 @@ Pay Financial Datasets $200/mo only if:
 - You want turnkey schema compatibility and don't want to maintain an adapter layer
 - Your time is worth >> $180/mo saved
 
+## findata-proxy v0.2 upgrade (this repo)
+
+Shipped in v0.2: the `/financials/*` endpoints now read directly from SEC EDGAR
+XBRL companyfacts, with yfinance as automatic fallback. This is the highest-
+leverage upgrade identified below — now implemented.
+
+Result: 15+ years of authoritative fundamentals for every US-listed company,
+for free. AAPL annual income now returns 10+ years back to ~2016; MSFT likewise.
+Quarterly and TTM aggregation are implemented with proper period-alignment
+filtering. See `app/sec/xbrl.py` and `app/sec/concept_map.py`.
+
+The fallback chain is now:
+1. SEC XBRL companyfacts (US public filers, authoritative, 15+ yr)
+2. yfinance (fills in non-US tickers, ADRs, or when SEC is unavailable)
+
 ## SEC EDGAR Deep-Dive (the sleeper giant)
 
 SEC EDGAR is the **actual source** of what most commercial providers resell. For fundamentals investing it's:
@@ -93,7 +108,7 @@ SEC EDGAR is the **actual source** of what most commercial providers resell. For
 - `/api/xbrl/companyfacts/CIK{cik}.json` — EVERY reported line item across ALL filings (this is the gold mine)
 - XBRL gives you the entire income statement / balance sheet / cash flow at line-item granularity, back to ~2009, including amendments and restatements
 
-**Upgrade path for this proxy**: implement a `sec/xbrl.py` module that calls `companyfacts` and maps XBRL concepts (`us-gaap:Revenues`, `us-gaap:NetIncomeLoss`, etc.) to FD's field names. That single module would eliminate yfinance's 4-year historical limit and give us 15+ years of pristine SEC-sourced data for free. **This is the highest-leverage improvement on the roadmap.**
+**Upgrade path for this proxy**: ~~implement a `sec/xbrl.py` module that calls `companyfacts` and maps XBRL concepts (`us-gaap:Revenues`, `us-gaap:NetIncomeLoss`, etc.) to FD's field names.~~ **Implemented in v0.2.** The `app/sec/xbrl.py` module now powers `/financials/*`, unlocking 15+ years of SEC-sourced data for free. Remaining XBRL work: segment-axis parsing for `/financials/segmented-revenues/`.
 
 ## Segmented Revenues — The Known Gap
 
